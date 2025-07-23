@@ -2,6 +2,8 @@ package com.ecuatrails.api.model;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.ecuatrails.api.helpers.converter.DurationConverter;
 
@@ -13,6 +15,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -21,6 +25,22 @@ public class Route {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer routeId;
+	
+	@ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+    		name = "route_lodging",
+    		joinColumns = @JoinColumn(name = "route_id"),
+    		inverseJoinColumns = @JoinColumn(name = "lodging_id")
+    )
+    private List<Lodging> lodgings = new ArrayList<>();
+	
+	@ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+    		name = "route_interest_point",
+    		joinColumns = @JoinColumn(name = "route_id"),
+    		inverseJoinColumns = @JoinColumn(name = "interest_point_id")
+    )
+    private List<InterestPoint> interestPoints = new ArrayList<>();
 	
 	@Column(length = 64)
 	private String name;
@@ -50,11 +70,13 @@ public class Route {
 	private LocalDateTime updated;
 	
 	// Constructor
-	public Route(Integer routeId, String name, String description, Category category, Duration estimatedDuration,
-			String recommendedSchedule, Float distance, String difficulty, Boolean status, LocalDateTime created,
-			LocalDateTime updated) {
+	public Route(Integer routeId, List<Lodging> lodgings, List<InterestPoint> interestPoints, String name,
+			String description, Category category, Duration estimatedDuration, String recommendedSchedule,
+			Float distance, String difficulty, Boolean status, LocalDateTime created, LocalDateTime updated) {
 		super();
 		this.routeId = routeId;
+		this.lodgings = lodgings;
+		this.interestPoints = interestPoints;
 		this.name = name;
 		this.description = description;
 		this.category = category;
@@ -79,6 +101,22 @@ public class Route {
 
 	public void setRouteId(Integer routeId) {
 		this.routeId = routeId;
+	}
+
+	public List<Lodging> getLodgings() {
+		return lodgings;
+	}
+
+	public void setLodgings(List<Lodging> lodgings) {
+		this.lodgings = lodgings;
+	}
+
+	public List<InterestPoint> getInterestPoints() {
+		return interestPoints;
+	}
+
+	public void setInterestPoints(List<InterestPoint> interestPoints) {
+		this.interestPoints = interestPoints;
 	}
 
 	public String getName() {
