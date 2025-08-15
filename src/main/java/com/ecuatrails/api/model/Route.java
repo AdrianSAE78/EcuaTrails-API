@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.ecuatrails.api.helpers.converter.DurationConverter;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -18,6 +19,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
 @Entity
 public class Route {
@@ -41,6 +44,10 @@ public class Route {
     		inverseJoinColumns = @JoinColumn(name = "interest_point_id")
     )
     private List<InterestPoint> interestPoints = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("position asc, routeImageId asc")
+	private java.util.List<RouteImage> images = new java.util.ArrayList<>();
 	
 	@Column(length = 64)
 	private String name;
@@ -70,13 +77,14 @@ public class Route {
 	private LocalDateTime updated;
 	
 	// Constructor
-	public Route(Integer routeId, List<Lodging> lodgings, List<InterestPoint> interestPoints, String name,
+	public Route(Integer routeId, List<Lodging> lodgings, List<InterestPoint> interestPoints, List<RouteImage> images, String name,
 			String description, Category category, Duration estimatedDuration, String recommendedSchedule,
 			Float distance, String difficulty, Boolean status, LocalDateTime created, LocalDateTime updated) {
 		super();
 		this.routeId = routeId;
 		this.lodgings = lodgings;
 		this.interestPoints = interestPoints;
+		this.images = images;
 		this.name = name;
 		this.description = description;
 		this.category = category;
@@ -117,6 +125,14 @@ public class Route {
 
 	public void setInterestPoints(List<InterestPoint> interestPoints) {
 		this.interestPoints = interestPoints;
+	}
+	
+	public List<RouteImage> getImages() {
+		return images;
+	}
+
+	public void setImages(List<RouteImage> images) {
+		this.images = images;
 	}
 
 	public String getName() {

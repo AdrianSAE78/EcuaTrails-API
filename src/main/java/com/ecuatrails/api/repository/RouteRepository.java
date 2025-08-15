@@ -1,0 +1,64 @@
+package com.ecuatrails.api.repository;
+
+import java.time.Duration;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.ecuatrails.api.model.Lodging;
+import com.ecuatrails.api.model.Route;
+
+public interface RouteRepository extends JpaRepository<Route, Integer>{
+
+	@Query("""
+			  select r
+			  from Route r
+			  where r.status = true
+			    and (:categoryId is null or r.category.categoryId = :categoryId)
+			    and (:maxDuration is null or r.estimatedDuration <= :maxDuration)
+			    and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
+			  order by r.created desc
+			""")
+	List<Route> findRecommended(
+			@Param("categoryId") Integer categoryId,
+			@Param("maxDuration") Duration maxDuration,
+			@Param("excludeIds") List<Integer> excludeIds
+			);
+
+	@Query("""
+			  select r from Route r
+			  where r.status = true
+			    and (:categoryId is null or r.category.categoryId = :categoryId)
+			    and (:difficulty is null or r.difficulty = :difficulty)
+			    and (:q is null or lower(r.name) like lower(concat('%', :q, '%'))
+			                   or lower(r.description) like lower(concat('%', :q, '%')))
+			  order by r.created desc
+			""")
+	Page<Route> search(
+			@Param("categoryId") Integer categoryId,
+			@Param("difficulty") String difficulty,
+			@Param("q") String q,
+			Pageable pageable
+			);
+
+	@Query("""
+			  select l from Route r
+			    join r.lodgings l
+			  where r.routeId = :routeId and l.status = true
+			  order by l.name asc
+			""")
+	List<Lodging> findActiveLodgingsByRoute(@Param("routeId") Integer routeId);
+
+	@Query("select count(r) from Route r where r.category.categoryId = :categoryId")
+	long countByCategoryId(@Param("categoryId") Integer categoryId);
+
+	@Query("""
+			  select count(r) from Route r join r.interestPoints ip
+			  where ip.interestPointId = :poiId
+			""")
+	long countByInterestPoint(@Param("poiId") Integer poiId);
+}

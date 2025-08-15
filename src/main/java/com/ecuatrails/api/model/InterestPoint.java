@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
 @Entity
 public class InterestPoint {
@@ -21,6 +24,10 @@ public class InterestPoint {
 	
 	@ManyToMany(mappedBy = "interestPoints")
 	private List<Route> routes = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "interestPoint", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("position asc, interestPointImageId asc")
+	private java.util.List<InterestPointImage> images = new java.util.ArrayList<>();
 	
 	@Column(length = 32)
 	private String name;
@@ -51,14 +58,15 @@ public class InterestPoint {
 	private LocalDateTime Modified;
 	
 	private Boolean Status = true;
-	
+
 	// Constructor
-	public InterestPoint(Integer interestPointId, List<Route> routes, String name, String description, Float latitude,
-			Float longitude, String address, String city, String openingHours, BigDecimal rating, Integer reviewCount,
-			LocalDateTime created, LocalDateTime modified, Boolean status) {
+	public InterestPoint(Integer interestPointId, List<Route> routes, List<InterestPointImage> images, String name,
+			String description, Float latitude, Float longitude, String address, String city, String openingHours,
+			BigDecimal rating, Integer reviewCount, LocalDateTime created, LocalDateTime modified, Boolean status) {
 		super();
 		this.interestPointId = interestPointId;
 		this.routes = routes;
+		this.images = images;
 		this.name = name;
 		this.description = description;
 		this.latitude = latitude;
@@ -93,6 +101,14 @@ public class InterestPoint {
 
 	public void setRoutes(List<Route> routes) {
 		this.routes = routes;
+	}
+
+	public java.util.List<InterestPointImage> getImages() {
+		return images;
+	}
+
+	public void setImages(java.util.List<InterestPointImage> images) {
+		this.images = images;
 	}
 
 	public String getName() {

@@ -3,6 +3,7 @@ package com.ecuatrails.api.controller;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -165,4 +168,21 @@ public class AuthController {
                 .authType("LOCAL")
                 .build());
     }
+    
+    @GetMapping("/session")
+    public ResponseEntity<AuthResponse> session(@AuthenticationPrincipal UserDetails ud) {
+        User user = userService.findByUsername(ud.getUsername());
+        List<String> roles = user.getRoles().stream()
+            .map(r -> "ROLE_" + r.getRoleCode()).toList();
+
+        var info = new AuthResponse.UserInfo(
+            user.getName(), user.getLastName(), user.getUsername(), user.getEmail(), roles
+        );
+        return ResponseEntity.ok(AuthResponse.builder()
+            .token(null)
+            .user(info)
+            .authType(user.getAuthProvider())
+            .build());
+    }
+    
 }

@@ -4,12 +4,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
 @Entity
 public class Lodging {
@@ -20,6 +23,10 @@ public class Lodging {
 	
 	@ManyToMany(mappedBy = "lodgings")
 	private List<Route> routes = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "lodging", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy("position asc, lodgingImageId asc")
+	private java.util.List<LodgingImage> images = new java.util.ArrayList<>();
 	
 	@Column(length = 64)
 	private String name;
@@ -35,13 +42,14 @@ public class Lodging {
 	private Float longitude;
 	
 	private Boolean status = true;
-	
+
 	// Constructor
-	public Lodging(Integer lodgingId, List<Route> routes, String name, String description, BigDecimal approximatePrice,
-			Float latitude, Float longitude, Boolean status) {
+	public Lodging(Integer lodgingId, List<Route> routes, List<LodgingImage> images, String name, String description,
+			BigDecimal approximatePrice, Float latitude, Float longitude, Boolean status) {
 		super();
 		this.lodgingId = lodgingId;
 		this.routes = routes;
+		this.images = images;
 		this.name = name;
 		this.description = description;
 		this.approximatePrice = approximatePrice;
@@ -70,6 +78,14 @@ public class Lodging {
 
 	public void setRoutes(List<Route> routes) {
 		this.routes = routes;
+	}
+
+	public java.util.List<LodgingImage> getImages() {
+		return images;
+	}
+
+	public void setImages(java.util.List<LodgingImage> images) {
+		this.images = images;
 	}
 
 	public String getName() {
