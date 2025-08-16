@@ -5,10 +5,17 @@ import java.util.stream.Collectors;
 import com.ecuatrails.api.dto.AdminInterestPointDetail;
 import com.ecuatrails.api.dto.AdminInterestPointList;
 import com.ecuatrails.api.dto.AdminIptDto;
+import com.ecuatrails.api.dto.AdminLodgingDetailDto;
+import com.ecuatrails.api.dto.AdminLodgingListDto;
+import com.ecuatrails.api.dto.AdminRouteDetailDto;
+import com.ecuatrails.api.dto.AdminRouteListDto;
+import com.ecuatrails.api.dto.AdminRouteLodgingLinkDto;
+import com.ecuatrails.api.dto.AdminRoutePoiLinkDto;
 import com.ecuatrails.api.dto.AdminTransportDetail;
 import com.ecuatrails.api.dto.AdminTransportList;
 import com.ecuatrails.api.dto.CategoryDto;
 import com.ecuatrails.api.dto.CreateInterestPointRequest;
+import com.ecuatrails.api.dto.CreateLodgingRequest;
 import com.ecuatrails.api.dto.CreateTransportRequest;
 import com.ecuatrails.api.dto.ImageDto;
 import com.ecuatrails.api.dto.InterestPointDetail;
@@ -24,12 +31,15 @@ import com.ecuatrails.api.dto.RouteListItem;
 import com.ecuatrails.api.dto.RouteMap;
 import com.ecuatrails.api.dto.TransportDto;
 import com.ecuatrails.api.dto.UpdateInterestPointRequest;
+import com.ecuatrails.api.dto.UpdateLodgingRequest;
 import com.ecuatrails.api.dto.UpdateTransportRequest;
 import com.ecuatrails.api.model.Category;
 import com.ecuatrails.api.model.InterestPoint;
 import com.ecuatrails.api.model.InterestPointTransport;
 import com.ecuatrails.api.model.Lodging;
 import com.ecuatrails.api.model.Route;
+import com.ecuatrails.api.model.RouteInterestPoint;
+import com.ecuatrails.api.model.RouteLodging;
 import com.ecuatrails.api.model.Transport;
 
 public class Mappers {
@@ -215,5 +225,62 @@ public class Mappers {
 				ipt.getInterestPoint().getName(), ipt.getTransport().getTransportId(), ipt.getTransport().getName(),
 				ipt.getWalkingDistanceMeters(), ipt.getEstimatedWalkingTime(), ipt.getAccessibilityNotes(),
 				ipt.getStatus());
+	}
+
+	public static AdminRouteListDto toAdminRouteList(Route r) {
+		return new AdminRouteListDto(r.getRouteId(), r.getName(),
+				r.getCategory() != null ? r.getCategory().getName() : null, r.getDifficulty(), r.getDistance(),
+				r.getStatus());
+	}
+
+	public static AdminRouteDetailDto toAdminRouteDetail(Route r) {
+		return new AdminRouteDetailDto(r.getRouteId(), r.getName(), r.getDescription(),
+				r.getCategory() != null ? r.getCategory().getCategoryId() : null, r.getEstimatedDuration(),
+				r.getRecommendedSchedule(), r.getDistance(), r.getDifficulty(), r.getStatus());
+	}
+
+	public static AdminRoutePoiLinkDto toAdminRoutePoiLink(RouteInterestPoint rip) {
+		return new AdminRoutePoiLinkDto(rip.getRouteInterestPointId(), rip.getInterestPoint().getInterestPointId(),
+				rip.getInterestPoint().getName(), rip.getPosition());
+	}
+
+	public static AdminRouteLodgingLinkDto toAdminRouteLodgingLink(RouteLodging rl) {
+		return new AdminRouteLodgingLinkDto(rl.getRouteLodgingId(), rl.getLodging().getLodgingId(),
+				rl.getLodging().getName());
+	}
+
+	public static AdminLodgingListDto toAdminLodgingList(Lodging l) {
+		return new AdminLodgingListDto(l.getLodgingId(), l.getName(), l.getDescription(), l.getApproximatePrice(),
+				l.getLatitude(), l.getLongitude(), l.getStatus());
+	}
+
+	public static AdminLodgingDetailDto toAdminLodgingDetail(Lodging l) {
+		return new AdminLodgingDetailDto(l.getLodgingId(), l.getName(), l.getDescription(), l.getApproximatePrice(),
+				l.getLatitude(), l.getLongitude(), l.getStatus());
+	}
+
+	public static void applyAdminLodgingCreate(Lodging l, CreateLodgingRequest r) {
+		l.setName(r.name());
+		l.setDescription(r.description());
+		l.setApproximatePrice(r.approximatePrice());
+		l.setLatitude(r.latitude());
+		l.setLongitude(r.longitude());
+		if (r.status() != null)
+			l.setStatus(r.status());
+	}
+
+	public static void applyAdminLodgingUpdate(Lodging l, UpdateLodgingRequest r) {
+		if (r.name() != null)
+			l.setName(r.name());
+		if (r.description() != null)
+			l.setDescription(r.description());
+		if (r.approximatePrice() != null)
+			l.setApproximatePrice(r.approximatePrice());
+		if (r.latitude() != null)
+			l.setLatitude(r.latitude());
+		if (r.longitude() != null)
+			l.setLongitude(r.longitude());
+		if (r.status() != null)
+			l.setStatus(r.status());
 	}
 }

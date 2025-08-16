@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 import com.ecuatrails.api.model.Lodging;
 import com.ecuatrails.api.model.Route;
 
-public interface RouteRepository extends JpaRepository<Route, Integer>{
+public interface RouteRepository extends JpaRepository<Route, Integer> {
 
 	@Query("""
 			  select r
@@ -23,11 +23,8 @@ public interface RouteRepository extends JpaRepository<Route, Integer>{
 			    and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
 			  order by r.created desc
 			""")
-	List<Route> findRecommended(
-			@Param("categoryId") Integer categoryId,
-			@Param("maxDuration") Duration maxDuration,
-			@Param("excludeIds") List<Integer> excludeIds
-			);
+	List<Route> findRecommended(@Param("categoryId") Integer categoryId, @Param("maxDuration") Duration maxDuration,
+			@Param("excludeIds") List<Integer> excludeIds);
 
 	@Query("""
 			  select r from Route r
@@ -38,12 +35,8 @@ public interface RouteRepository extends JpaRepository<Route, Integer>{
 			                   or lower(r.description) like lower(concat('%', :q, '%')))
 			  order by r.created desc
 			""")
-	Page<Route> search(
-			@Param("categoryId") Integer categoryId,
-			@Param("difficulty") String difficulty,
-			@Param("q") String q,
-			Pageable pageable
-			);
+	Page<Route> search(@Param("categoryId") Integer categoryId, @Param("difficulty") String difficulty,
+			@Param("q") String q, Pageable pageable);
 
 	@Query("""
 			  select l from Route r
@@ -61,4 +54,25 @@ public interface RouteRepository extends JpaRepository<Route, Integer>{
 			  where ip.interestPointId = :poiId
 			""")
 	long countByInterestPoint(@Param("poiId") Integer poiId);
+
+	@Query("""
+			  select r from Route r
+			    left join r.category c
+			  where (:q is null or lower(r.name) like lower(concat('%', :q, '%'))
+			                 or lower(r.description) like lower(concat('%', :q, '%')))
+			    and (:categoryId is null or c.categoryId = :categoryId)
+			    and (:status is null or r.status = :status)
+			  order by r.created desc
+			""")
+	Page<Route> searchByStatus(@Param("q") String q, @Param("categoryId") Integer categoryId,
+			@Param("status") Boolean status, Pageable pageable);
+
+	@Query("select count(l) from Route r join r.lodgings l where r.routeId = :routeId")
+	long countLodgings(@Param("routeId") Integer routeId);
+
+	@Query("select count(p) from Route r join r.interestPoints p where r.routeId = :routeId")
+	long countPois(@Param("routeId") Integer routeId);
+
+	@Query("select count(r) from Route r join r.lodgings l where l.lodgingId = :lodgingId")
+	long countRoutesUsingLodging(@Param("lodgingId") Integer lodgingId);
 }

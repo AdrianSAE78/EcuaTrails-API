@@ -31,7 +31,7 @@ public class DashboardController {
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryDto>> getCategories() {
         List<CategoryDto> out = categoryRepository.findAllByOrderByNameAsc()
-            .stream().map(Mappers::toDto).collect(Collectors.toList());
+            .stream().map(Mappers::toCategoryDto).collect(Collectors.toList());
         return ResponseEntity.ok(out);
     }
 

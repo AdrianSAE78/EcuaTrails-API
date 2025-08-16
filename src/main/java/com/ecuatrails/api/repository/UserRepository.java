@@ -10,8 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 import com.ecuatrails.api.model.User;
 
+
 public interface UserRepository extends JpaRepository <User, Integer> {
-	User findByUsername(String username);
+	Optional<User> findByUsername(String username);
 	Optional<User> findByEmail(String email);
 	Optional<User> findByUid(String uid);
 	boolean existsByUsername(String username);

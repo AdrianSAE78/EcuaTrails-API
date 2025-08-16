@@ -35,7 +35,8 @@ public class ProfileService {
 	}
 
 	public MeDto getMe(String username) {
-		User u = userRepository.findByUsername(username);
+		User u = userRepository.findByUsername(username)
+				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		return new MeDto(
 				u.getUserId(), u.getName(), u.getLastName(), u.getUsername(), u.getEmail(),
 				u.getBirthday(), u.getAuthProvider(), u.getUid()
@@ -43,7 +44,8 @@ public class ProfileService {
 	}
 
 	public MeDto updateMe(String username, UpdateMeRequest req) {
-		User u = userRepository.findByUsername(username);
+		User u = userRepository.findByUsername(username)
+				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		if (req.name() != null) u.setName(req.name());
 		if (req.lastName() != null) u.setLastName(req.lastName());
 		if (req.email() != null) u.setEmail(req.email());
@@ -55,7 +57,8 @@ public class ProfileService {
 	}
 
 	public Preference getPreferences(String username) {
-		User u = userRepository.findByUsername(username);
+		User u = userRepository.findByUsername(username)
+				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		UserPreference p = u.getUserPreference();
 		Integer categoryId = p != null && p.getCategory() != null ? p.getCategory().getCategoryId() : null;
 		return new Preference(
@@ -66,7 +69,8 @@ public class ProfileService {
 	}
 
 	public Preference updatePreferences(String username, UpdatePreferenceRequest req) {
-		User u = userRepository.findByUsername(username);
+		User u = userRepository.findByUsername(username)
+				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		UserPreference p = u.getUserPreference();
 		if (p == null) { p = new UserPreference(); u.setUserPreference(p); }
 
@@ -83,7 +87,8 @@ public class ProfileService {
 	}
 
 	public MeStatsDto getStats(String username) {
-		User u = userRepository.findByUsername(username);
+		User u = userRepository.findByUsername(username)
+				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		long finished = historyRepository.countFinished(u.getUserId());
 		float totalKm = (historyRepository.sumDistanceFinished(u.getUserId()) == null ? 0f : historyRepository.sumDistanceFinished(u.getUserId())) / 1_000f;
 		var dur = historyRepository.sumDurationFinished(u.getUserId());

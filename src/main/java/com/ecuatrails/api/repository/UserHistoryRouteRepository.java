@@ -35,8 +35,17 @@ public interface UserHistoryRouteRepository extends JpaRepository<UserHistoryRou
 			    and h.isFinished = true and h.routeDate >= :since
 			  order by h.routeDate desc
 			""")
-	List<UserHistoryRoute> findFinishedSince(@Param("userId") Integer userId,
-			@Param("routeId") Integer routeId, @Param("since") LocalDateTime since);
+	List<UserHistoryRoute> findFinishedSince(@Param("userId") Integer userId, @Param("routeId") Integer routeId,
+			@Param("since") LocalDateTime since);
+
+	@Query("""
+			    select distinct h.route.routeId
+			    from UserHistoryRoute h
+			    where h.user.userId = :userId
+			      and h.isFinished = true
+			      and h.routeDate >= :cutoff
+			""")
+	List<Integer> findFinishedRouteIdsSince(@Param("userId") Integer userId, @Param("cutoff") LocalDateTime cutoff);
 
 	@Query("""
 			  select h from UserHistoryRoute h
@@ -50,7 +59,8 @@ public interface UserHistoryRouteRepository extends JpaRepository<UserHistoryRou
 			  select h from UserHistoryRoute h
 			  where h.user.userId = :userId and h.userHistoryRouteId = :historyId
 			""")
-	Optional<UserHistoryRoute> findOneByUserAndId(@Param("userId") Integer userId, @Param("historyId") Integer historyId);
+	Optional<UserHistoryRoute> findOneByUserAndId(@Param("userId") Integer userId,
+			@Param("historyId") Integer historyId);
 
 	@Query("""
 			  select count(h)
@@ -80,5 +90,6 @@ public interface UserHistoryRouteRepository extends JpaRepository<UserHistoryRou
 			  where h.user.userId = :userId
 			  order by h.routeDate desc
 			""")
-	java.util.List<UserHistoryRoute> findRecent(@Param("userId") Integer userId, org.springframework.data.domain.Pageable pageable);
+	java.util.List<UserHistoryRoute> findRecent(@Param("userId") Integer userId,
+			org.springframework.data.domain.Pageable pageable);
 }
