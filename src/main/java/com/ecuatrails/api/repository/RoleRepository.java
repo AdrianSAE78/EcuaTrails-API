@@ -8,4 +8,5 @@ import com.ecuatrails.api.model.Role;
 
 public interface RoleRepository extends JpaRepository<Role, Integer> {
 	Optional<Role> findByRoleCode(String code);
+	boolean existsByRoleCodeIgnoreCase(String roleCode);
 }

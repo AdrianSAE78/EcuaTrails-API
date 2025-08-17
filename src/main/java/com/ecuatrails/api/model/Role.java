@@ -20,7 +20,7 @@ public class Role {
 	@ManyToMany(mappedBy = "roles")
 	private List<User> users = new ArrayList<>();
 	
-	@Column(length = 8)
+	@Column(length = 8, unique = true)
 	private String roleCode;
 	
 	@Column(length = 16)

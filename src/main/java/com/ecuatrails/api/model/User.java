@@ -44,13 +44,13 @@ public class User {
     @Column(length = 32)
     private String lastName;
 
-    @Column(length = 64)
+    @Column(length = 64, unique = true)
     private String username;
 
-    @Column(length = 128)
+    @Column(length = 128, unique = true)
     private String email;
 
-    @Column(length = 32)
+    @Column(length = 128)
     private String password;
 
     private LocalDate birthday;

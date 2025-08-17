@@ -17,6 +17,8 @@ public interface UserRepository extends JpaRepository <User, Integer> {
 	Optional<User> findByUid(String uid);
 	boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+    boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByEmailIgnoreCase(String email);
     
     @Query("""
     	      select h.route.routeId
