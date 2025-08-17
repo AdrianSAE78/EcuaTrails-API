@@ -14,7 +14,7 @@ import com.ecuatrails.api.dto.AdminTransportList;
 import com.ecuatrails.api.dto.CreateIptLinkRequest;
 import com.ecuatrails.api.dto.CreateTransportRequest;
 import com.ecuatrails.api.dto.UpdateTransportRequest;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.InterestPointTransport;
 import com.ecuatrails.api.model.Transport;
 import com.ecuatrails.api.repository.InterestPointRepository;

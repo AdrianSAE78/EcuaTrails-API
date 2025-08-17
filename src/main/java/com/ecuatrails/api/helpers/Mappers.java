@@ -1,4 +1,4 @@
-package com.ecuatrails.api.helpers.converter;
+package com.ecuatrails.api.helpers;
 
 import java.util.stream.Collectors;
 

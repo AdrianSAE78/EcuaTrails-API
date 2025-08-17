@@ -10,7 +10,7 @@ import com.ecuatrails.api.dto.AdminLodgingDetailDto;
 import com.ecuatrails.api.dto.AdminLodgingListDto;
 import com.ecuatrails.api.dto.CreateLodgingRequest;
 import com.ecuatrails.api.dto.UpdateLodgingRequest;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.Lodging;
 import com.ecuatrails.api.repository.LodgingRepository;
 import com.ecuatrails.api.repository.RouteRepository;

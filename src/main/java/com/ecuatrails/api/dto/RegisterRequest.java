@@ -2,12 +2,34 @@ package com.ecuatrails.api.dto;
 
 import java.time.LocalDate;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+@Schema(name = "RegisterRequest", description = "Datos para registro LOCAL")
 public class RegisterRequest {
+	@Schema(description = "Nombre", example = "Ana")
+    @NotBlank
     private String name;
+
+    @Schema(description = "Apellido", example = "Pérez")
+    @NotBlank
     private String lastName;
+
+    @Schema(description = "Username único", example = "ana")
+    @NotBlank
     private String username;
+
+    @Schema(description = "Email único", example = "ana@acme.com")
+    @Email @NotBlank
     private String email;
+
+    @Schema(description = "Contraseña (mín. 8)", example = "Secr3t0!")
+    @Size(min = 8)
     private String password;
+
+    @Schema(description = "Fecha de nacimiento (YYYY-MM-DD)", example = "1995-03-15")
     private LocalDate birthday;
 
     public RegisterRequest() {}

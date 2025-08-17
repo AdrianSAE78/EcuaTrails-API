@@ -17,7 +17,7 @@ import com.ecuatrails.api.dto.CreateRoutePoiLinkRequest;
 import com.ecuatrails.api.dto.CreateRouteRequest;
 import com.ecuatrails.api.dto.ReorderRoutePoiRequest;
 import com.ecuatrails.api.dto.UpdateRouteRequest;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.Route;
 import com.ecuatrails.api.model.RouteInterestPoint;
 import com.ecuatrails.api.model.RouteLodging;

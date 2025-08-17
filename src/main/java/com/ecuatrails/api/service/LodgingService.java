@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.ecuatrails.api.dto.LodgingDetail;
 import com.ecuatrails.api.dto.LodgingListItem;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.Lodging;
 import com.ecuatrails.api.repository.LodgingRepository;
 import com.ecuatrails.api.repository.RouteRepository;

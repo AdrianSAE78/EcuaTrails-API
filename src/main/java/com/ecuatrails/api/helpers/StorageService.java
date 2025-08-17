@@ -1,4 +1,4 @@
-package com.ecuatrails.api.helpers.converter;
+package com.ecuatrails.api.helpers;
 
 public interface StorageService {
 

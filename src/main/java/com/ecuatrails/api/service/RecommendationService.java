@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.ecuatrails.api.dto.RouteCard;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.User;
 import com.ecuatrails.api.model.UserPreference;
 import com.ecuatrails.api.repository.RouteRepository;

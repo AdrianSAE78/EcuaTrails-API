@@ -2,7 +2,7 @@ package com.ecuatrails.api.service.admin;
 
 import org.springframework.stereotype.Service;
 
-import com.ecuatrails.api.helpers.converter.StorageService;
+import com.ecuatrails.api.helpers.StorageService;
 
 @Service
 public class LocalStorageService implements StorageService {

@@ -14,7 +14,7 @@ import com.ecuatrails.api.dto.BulkInterestPointRequest;
 import com.ecuatrails.api.dto.CreateInterestPointRequest;
 import com.ecuatrails.api.dto.GeocodeResponse;
 import com.ecuatrails.api.dto.UpdateInterestPointRequest;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.InterestPoint;
 import com.ecuatrails.api.repository.InterestPointRepository;
 import com.ecuatrails.api.repository.InterestPointTransportRepository;

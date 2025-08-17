@@ -3,10 +3,15 @@ package com.ecuatrails.api.controller;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import com.ecuatrails.api.dto.LocationUpdate;
 import com.ecuatrails.api.service.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+@SecurityRequirement(name = "bearer-jwt")
+@Validated
 @Controller
 public class LiveLocationController {
 	private final SimpMessagingTemplate ws;

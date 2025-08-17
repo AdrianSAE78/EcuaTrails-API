@@ -2,16 +2,26 @@ package com.ecuatrails.api.dto;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(name = "AuthResponse", description = "Respuesta de autenticación y sesión")
 public class AuthResponse {
-	private String token;
+	@Schema(description = "JWT firmado (puede ser null en /session)", example = "eyJhbGciOi...")
+    private String token;
+
+    @Schema(description = "Datos básicos del usuario")
     private UserInfo user;
+
+    @Schema(description = "Proveedor de autenticación", example = "LOCAL", allowableValues = {"LOCAL","FIREBASE"})
     private String authType;
 
+    @Schema(name = "AuthResponse.UserInfo", description = "Perfil mínimo del usuario")
     public static class UserInfo {
-        private String name;
-        private String lastName;
-        private String username;
-        private String email;
+    	@Schema(example = "Ana") private String name;
+        @Schema(example = "Pérez") private String lastName;
+        @Schema(example = "ana") private String username;
+        @Schema(example = "ana@acme.com") private String email;
+        @Schema(description = "Roles con prefijo ROLE_", example = "[\"ROLE_USER\",\"ROLE_ADMIN\"]")
         private List<String> roles;
 
         public UserInfo(String name, String lastName, String username, String email, List<String> roles) {

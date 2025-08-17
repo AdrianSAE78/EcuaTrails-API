@@ -5,17 +5,22 @@ import java.util.NoSuchElementException;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 
 import com.ecuatrails.api.dto.RouteDetail;
 import com.ecuatrails.api.dto.RouteListItem;
 import com.ecuatrails.api.dto.RouteMap;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.Route;
 import com.ecuatrails.api.model.UserHistoryRoute;
 import com.ecuatrails.api.repository.RouteRepository;
 import com.ecuatrails.api.repository.UserHistoryRouteRepository;
 import com.ecuatrails.api.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
+@Service
+@Transactional
 public class RouteService {
 
 	private final RouteRepository routeRepository;

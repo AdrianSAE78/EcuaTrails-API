@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.ecuatrails.api.dto.InterestPointDetail;
 import com.ecuatrails.api.dto.InterestPointListItem;
-import com.ecuatrails.api.helpers.converter.Mappers;
+import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.InterestPoint;
 import com.ecuatrails.api.repository.InterestPointRepository;
 import com.ecuatrails.api.repository.RouteRepository;
