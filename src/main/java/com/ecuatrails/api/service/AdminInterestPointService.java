@@ -10,15 +10,21 @@ import org.springframework.stereotype.Service;
 
 import com.ecuatrails.api.dto.AdminInterestPointDetail;
 import com.ecuatrails.api.dto.AdminInterestPointList;
+import com.ecuatrails.api.dto.AdminPoiTransportLinkDto;
 import com.ecuatrails.api.dto.BulkInterestPointRequest;
 import com.ecuatrails.api.dto.CreateInterestPointRequest;
+import com.ecuatrails.api.dto.CreateIptLinkRequest;
 import com.ecuatrails.api.dto.GeocodeResponse;
 import com.ecuatrails.api.dto.UpdateInterestPointRequest;
+import com.ecuatrails.api.dto.UpdatePoiTransportLinkRequest;
 import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.InterestPoint;
+import com.ecuatrails.api.model.InterestPointTransport;
+import com.ecuatrails.api.model.Transport;
 import com.ecuatrails.api.repository.InterestPointRepository;
 import com.ecuatrails.api.repository.InterestPointTransportRepository;
 import com.ecuatrails.api.repository.RouteRepository;
+import com.ecuatrails.api.repository.TransportRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -30,13 +36,15 @@ public class AdminInterestPointService {
 	private final RouteRepository routeRepository;
 	private final InterestPointTransportRepository iptRepository;
 	private final GeoService geoService;
+	private final TransportRepository transportRepository;
 
 	public AdminInterestPointService(InterestPointRepository ipRepository, RouteRepository routeRepository,
-			InterestPointTransportRepository iptRepository, GeoService geoService) {
+			InterestPointTransportRepository iptRepository, GeoService geoService, TransportRepository transportRepository) {
 		this.ipRepository = ipRepository;
 		this.routeRepository = routeRepository;
 		this.iptRepository = iptRepository;
 		this.geoService = geoService;
+		this.transportRepository = transportRepository;
 	}
 
 	public Page<AdminInterestPointList> list(String q, Boolean status, int page, int size) {
@@ -104,5 +112,65 @@ public class AdminInterestPointService {
 	// ---- GeoService ----
 	public interface GeoService {
 		Float[] geocode(String address, String city);
+	}
+	
+	// ---- Transports <-> POI ----
+	public java.util.List<AdminPoiTransportLinkDto> listTransports(Integer poiId) {
+	    ipRepository.findById(poiId).orElseThrow(() -> new NoSuchElementException("Interest point not found"));
+	    return iptRepository.findByPoi(poiId).stream()
+	        .map(this::toPoiTransportDto)
+	        .sorted(java.util.Comparator.comparing(AdminPoiTransportLinkDto::transportName))
+	        .toList();
+	}
+
+	public AdminPoiTransportLinkDto addTransport(Integer poiId, CreateIptLinkRequest r) {
+	    var poi = ipRepository.findById(poiId)
+	        .orElseThrow(() -> new NoSuchElementException("Interest point not found"));
+	    var t = transportRepository.findById(r.transportId())
+	        .orElseThrow(() -> new NoSuchElementException("Transport not found"));
+
+	    var existing = iptRepository.findByPoi(poiId).stream()
+	        .anyMatch(ipt -> ipt.getTransport().getTransportId().equals(t.getTransportId()));
+	    if (existing) throw new IllegalStateException("Transport already linked to this POI");
+
+	    var ipt = new InterestPointTransport();
+	    ipt.setInterestPoint(poi);
+	    ipt.setTransport(t);
+	    ipt.setWalkingDistanceMeters(r.walkingDistanceMeters());
+	    ipt.setEstimatedWalkingTime(r.estimatedWalkingTime());
+	    ipt.setAccessibilityNotes(r.accessibilityNotes());
+	    ipt.setStatus(r.status() != null ? r.status() : Boolean.TRUE);
+
+	    var saved = iptRepository.save(ipt);
+	    return toPoiTransportDto(saved);
+	}
+
+	public AdminPoiTransportLinkDto updateTransportLink(Integer poiId, Integer linkId, UpdatePoiTransportLinkRequest r) {
+	    var ipt = iptRepository.findOneForPoi(poiId, linkId)
+	        .orElseThrow(() -> new NoSuchElementException("Link not found"));
+	    if (r.walkingDistanceMeters() != null) ipt.setWalkingDistanceMeters(r.walkingDistanceMeters());
+	    if (r.estimatedWalkingTime() != null) ipt.setEstimatedWalkingTime(r.estimatedWalkingTime());
+	    if (r.accessibilityNotes() != null) ipt.setAccessibilityNotes(r.accessibilityNotes());
+	    if (r.status() != null) ipt.setStatus(r.status());
+	    return toPoiTransportDto(ipt);
+	}
+
+	public void removeTransport(Integer poiId, Integer linkId) {
+	    var ipt = iptRepository.findOneForPoi(poiId, linkId)
+	        .orElseThrow(() -> new NoSuchElementException("Link not found"));
+	    iptRepository.delete(ipt);
+	}
+
+	private AdminPoiTransportLinkDto toPoiTransportDto(InterestPointTransport ipt) {
+	    Transport t = ipt.getTransport();
+	    return new AdminPoiTransportLinkDto(
+	        ipt.getInterestPointTransportId(),
+	        t != null ? t.getTransportId() : null,
+	        t != null ? t.getName() : null,
+	        ipt.getWalkingDistanceMeters(),
+	        ipt.getEstimatedWalkingTime(),
+	        ipt.getAccessibilityNotes(),
+	        ipt.getStatus()
+	    );
 	}
 }

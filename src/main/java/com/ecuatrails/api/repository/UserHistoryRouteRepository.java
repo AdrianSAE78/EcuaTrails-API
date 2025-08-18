@@ -83,7 +83,7 @@ public interface UserHistoryRouteRepository extends JpaRepository<UserHistoryRou
 			    join h.route r
 			  where h.user.userId = :userId and h.isFinished = true
 			""")
-	java.time.Duration sumDurationFinished(@Param("userId") Integer userId);
+	Long sumDurationSecondsFinished(@Param("userId") Integer userId);
 
 	@Query("""
 			  select h from UserHistoryRoute h

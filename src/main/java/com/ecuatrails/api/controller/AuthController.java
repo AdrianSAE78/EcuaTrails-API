@@ -10,10 +10,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,7 +38,6 @@ import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -98,17 +99,17 @@ public class AuthController {
 		authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-		User user = userService.findByUsername(request.getUsername());
-		UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+		UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 		String jwtToken = jwtService.generateToken(userDetails);
 
-		List<String> roles = user.getRoles().stream().map(role -> "ROLE_" + role.getRoleCode())
-				.collect(Collectors.toList());
+		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+
+		var user = userService.findByUsername(request.getUsername());
 
 		AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getName(), user.getLastName(),
 				user.getUsername(), user.getEmail(), roles);
 
-		return ResponseEntity.ok(AuthResponse.builder().token(jwtToken).user(userInfo).build());
+		return ResponseEntity.ok(AuthResponse.builder().token(jwtToken).user(userInfo).authType("LOCAL").build());
 	}
 
 	@Operation(summary = "Iniciar sesión con Firebase", description = "Valida el **Firebase ID Token**, registra o actualiza el usuario y emite un **JWT** propio.", operationId = "loginFirebase")
@@ -220,12 +221,14 @@ public class AuthController {
 			@ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = ApiError.class))) })
 
 	@GetMapping("/session")
-	public ResponseEntity<AuthResponse> session(@Parameter(hidden = true) @AuthenticationPrincipal UserDetails ud) {
-		User user = userService.findByUsername(ud.getUsername());
-		List<String> roles = user.getRoles().stream().map(r -> "ROLE_" + r.getRoleCode()).toList();
+	@Transactional(readOnly = true)
+	public ResponseEntity<AuthResponse> session(@AuthenticationPrincipal UserDetails ud) {
+		var roles = ud.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
+		var user = userService.findByUsername(ud.getUsername());
 		var info = new AuthResponse.UserInfo(user.getName(), user.getLastName(), user.getUsername(), user.getEmail(),
 				roles);
+
 		return ResponseEntity
 				.ok(AuthResponse.builder().token(null).user(info).authType(user.getAuthProvider()).build());
 	}

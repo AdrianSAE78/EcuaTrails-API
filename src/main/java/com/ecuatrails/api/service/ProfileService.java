@@ -91,8 +91,8 @@ public class ProfileService {
 				 .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));;
 		long finished = historyRepository.countFinished(u.getUserId());
 		float totalKm = (historyRepository.sumDistanceFinished(u.getUserId()) == null ? 0f : historyRepository.sumDistanceFinished(u.getUserId())) / 1_000f;
-		var dur = historyRepository.sumDurationFinished(u.getUserId());
-		long minutes = dur == null ? 0 : dur.toMinutes();
+		Long seconds = historyRepository.sumDurationSecondsFinished(u.getUserId());
+		long minutes = (seconds == null ? 0L : seconds / 60L);
 		var last = historyRepository.findRecent(u.getUserId(), PageRequest.of(0, 1));
 		java.time.LocalDateTime lastAt = last.isEmpty() ? null : last.get(0).getRouteDate();
 

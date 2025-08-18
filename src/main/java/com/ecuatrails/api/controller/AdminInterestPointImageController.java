@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ecuatrails.api.dto.ImageDto;
 import com.ecuatrails.api.dto.ReorderImagesRequest;
 import com.ecuatrails.api.dto.UpdateImageMetaRequest;
 import com.ecuatrails.api.dto.UploadImageResponse;
+import com.ecuatrails.api.dto.UploadImagesResponse;
 import com.ecuatrails.api.dto.UploadPoiImageForm;
 import com.ecuatrails.api.helpers.StorageService;
 import com.ecuatrails.api.model.InterestPointImage;
@@ -71,51 +73,59 @@ public class AdminInterestPointImageController {
 				i.getTitle(), i.getAlt(), i.getCover(), i.getPosition())).toList();
 	}
 
-	@Operation(summary = "Subir imagen", description = "Sube una imagen para el POI. Si `cover=true`, desmarca otras como portada.", operationId = "adminUploadPoiImage")
+	@Operation(summary = "Subir imágenes", description = "Sube una o varias imágenes para el POI. Si `cover=true` en alguna, desmarca otras portadas.", operationId = "adminUploadPoiImages")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Subida", content = @Content(schema = @Schema(implementation = UploadImageResponse.class), examples = @ExampleObject(value = "{\n"
-					+ "  \"image\": {\"id\": 13, \"url\": \"https://cdn/poi/301/new.jpg\", \"title\": \"Vista\", \"alt\": \"Vista\", \"cover\": false, \"position\": 2}\n"
-					+ "}"))),
-			@ApiResponse(responseCode = "400", description = "Archivo inválido o entrada inválida", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
-			@ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
-			@ApiResponse(responseCode = "403", description = "No autorizado (ADMIN requerido)", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
-			@ApiResponse(responseCode = "404", description = "POI no encontrado", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))) })
-	@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Formulario multipart con archivo y metadatos", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = UploadPoiImageForm.class)))
+			@ApiResponse(responseCode = "200", description = "Subidas", content = @Content(schema = @Schema(implementation = UploadImagesResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Archivo/entrada inválida"),
+			@ApiResponse(responseCode = "401", description = "No autenticado"),
+			@ApiResponse(responseCode = "403", description = "No autorizado"),
+			@ApiResponse(responseCode = "404", description = "POI no encontrado") })
+	@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Formulario multipart con uno o varios archivos y metadatos comunes opcionales", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
 	@PostMapping(path = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public UploadImageResponse upload(@PathVariable Integer id,
-			@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+	public UploadImagesResponse upload(@PathVariable Integer id, @RequestParam("files") MultipartFile[] files,
+																												
 			@RequestParam(value = "title", required = false) String title,
 			@RequestParam(value = "alt", required = false) String alt,
 			@RequestParam(value = "cover", required = false) Boolean cover) throws Exception {
+
 		var poi = ipRepository.findById(id)
 				.orElseThrow(() -> new java.util.NoSuchElementException("InterestPoint not found"));
 
-		String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
-				.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
+		int basePos = imageRepo.listByPoi(id).size();
+		java.util.List<ImageDto> created = new java.util.ArrayList<>();
 
-		String name = java.util.UUID.randomUUID() + "." + ext;
-		String url = storage.upload("poi/" + id, name, file.getInputStream(), file.getContentType(), file.getSize());
+		for (int i = 0; i < files.length; i++) {
+			MultipartFile file = files[i];
+			String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
+					.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
 
-		var img = new InterestPointImage();
-		img.setInterestPoint(poi);
-		img.setUrl(url);
-		img.setTitle(title);
-		img.setAlt(alt);
-		img.setCover(cover != null ? cover : Boolean.FALSE);
-		img.setPosition(imageRepo.listByPoi(id).size());
-		var saved = imageRepo.save(img);
+			String name = java.util.UUID.randomUUID() + "." + ext;
+			String url = storage.upload("poi/" + id, name, file.getInputStream(), file.getContentType(),
+					file.getSize());
 
-		if (Boolean.TRUE.equals(img.getCover())) {
+			var img = new InterestPointImage();
+			img.setInterestPoint(poi);
+			img.setUrl(url);
+			img.setTitle(title);
+			img.setAlt(alt);
+			img.setCover(Boolean.TRUE.equals(cover) && i == 0);
+			img.setPosition(basePos + i);
+
+			var saved = imageRepo.save(img);
+			created.add(new ImageDto(saved.getInterestPointImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
+					saved.getCover(), saved.getPosition()));
+		}
+
+		if (Boolean.TRUE.equals(cover) && !created.isEmpty()) {
+			var first = created.get(0);
 			imageRepo.listByPoi(id).forEach(other -> {
-				if (!other.getInterestPointImageId().equals(saved.getInterestPointImageId())
-						&& Boolean.TRUE.equals(other.getCover())) {
+				if (!other.getInterestPointImageId().equals(first.id()) && Boolean.TRUE.equals(other.getCover())) {
 					other.setCover(false);
 				}
 			});
 		}
-		var dto = new ImageDto(saved.getInterestPointImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
-				saved.getCover(), saved.getPosition());
-		return new UploadImageResponse(dto);
+
+		return new UploadImagesResponse(created);
 	}
 
 	@Operation(summary = "Reordenar imágenes", description = "Actualiza la posición de las imágenes según `orderedIds` (0..n).", operationId = "adminReorderPoiImages")

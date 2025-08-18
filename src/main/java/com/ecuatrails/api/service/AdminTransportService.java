@@ -40,7 +40,8 @@ public class AdminTransportService {
 
 	public Page<AdminTransportList> list(String q, String type, Boolean status, int page, int size) {
 		var pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-		return transportRepository.search(q, type, status, pageable).map(Mappers::toAdminTransportList);
+		String term = (q == null || q.isBlank()) ? null : "%" + q + "%"; //
+		return transportRepository.search(term, type, status, pageable).map(Mappers::toAdminTransportList);
 	}
 
 	public AdminTransportDetail create(CreateTransportRequest r) {

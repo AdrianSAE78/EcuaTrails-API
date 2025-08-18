@@ -27,16 +27,18 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 			@Param("excludeIds") List<Integer> excludeIds);
 
 	@Query("""
-			  select r from Route r
-			  where r.status = true
-			    and (:categoryId is null or r.category.categoryId = :categoryId)
-			    and (:difficulty is null or r.difficulty = :difficulty)
-			    and (:q is null or lower(r.name) like lower(concat('%', :q, '%'))
-			                   or lower(r.description) like lower(concat('%', :q, '%')))
-			  order by r.created desc
-			""")
-	Page<Route> search(@Param("categoryId") Integer categoryId, @Param("difficulty") String difficulty,
-			@Param("q") String q, Pageable pageable);
+		    select r
+		    from Route r
+		    where r.status = true
+		      and (:categoryId is null or r.category.categoryId = :categoryId)
+		      and (:difficulty is null or r.difficulty = :difficulty)
+		      and (:term is null or r.name ilike :term or r.description ilike :term)
+		    order by r.created desc
+		  """)
+		  Page<Route> search(@Param("categoryId") Integer categoryId,
+		                     @Param("difficulty") String difficulty,
+		                     @Param("term") String term,
+		                     Pageable pageable);
 
 	@Query("""
 			  select l from Route r
@@ -56,16 +58,18 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 	long countByInterestPoint(@Param("poiId") Integer poiId);
 
 	@Query("""
-			  select r from Route r
-			    left join r.category c
-			  where (:q is null or lower(r.name) like lower(concat('%', :q, '%'))
-			                 or lower(r.description) like lower(concat('%', :q, '%')))
-			    and (:categoryId is null or c.categoryId = :categoryId)
-			    and (:status is null or r.status = :status)
-			  order by r.created desc
-			""")
-	Page<Route> searchByStatus(@Param("q") String q, @Param("categoryId") Integer categoryId,
-			@Param("status") Boolean status, Pageable pageable);
+		    select r
+		      from Route r
+		      left join r.category c
+		    where (:term is null or r.name ilike :term or r.description ilike :term)
+		      and (:categoryId is null or c.categoryId = :categoryId)
+		      and (:status is null or r.status = :status)
+		    order by r.created desc
+		  """)
+		  Page<Route> searchByStatus(@Param("term") String term,
+		                             @Param("categoryId") Integer categoryId,
+		                             @Param("status") Boolean status,
+		                             Pageable pageable);
 
 	@Query("select count(l) from Route r join r.lodgings l where r.routeId = :routeId")
 	long countLodgings(@Param("routeId") Integer routeId);

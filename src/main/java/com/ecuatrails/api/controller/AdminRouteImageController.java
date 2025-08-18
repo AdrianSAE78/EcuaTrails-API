@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ecuatrails.api.dto.ImageDto;
 import com.ecuatrails.api.dto.ReorderImagesRequest;
 import com.ecuatrails.api.dto.UpdateImageMetaRequest;
 import com.ecuatrails.api.dto.UploadImageResponse;
+import com.ecuatrails.api.dto.UploadImagesResponse;
 import com.ecuatrails.api.dto.UploadRouteImageForm;
 import com.ecuatrails.api.helpers.StorageService;
 import com.ecuatrails.api.model.RouteImage;
@@ -70,50 +72,57 @@ public class AdminRouteImageController {
 				i.getAlt(), i.getCover(), i.getPosition())).toList();
 	}
 
-	@Operation(summary = "Subir imagen", description = "Sube una imagen para la ruta. Si `cover=true`, desmarca otras portadas.", operationId = "adminUploadRouteImage")
+	@Operation(summary = "Subir imágenes", description = "Sube una o varias imágenes para la ruta. Si `cover=true` en alguna, desmarca otras portadas.", operationId = "adminUploadRouteImages")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Subida", content = @Content(schema = @Schema(implementation = UploadImageResponse.class), examples = @ExampleObject(value = "{\n"
-					+ "  \"image\": {\"id\": 23, \"url\": \"https://cdn/routes/101/new.jpg\", \"title\": \"Vista\", \"alt\": \"Vista\", \"cover\": false, \"position\": 2}\n"
-					+ "}"))),
-			@ApiResponse(responseCode = "400", description = "Archivo/entrada inválida", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
-			@ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
-			@ApiResponse(responseCode = "404", description = "Ruta no encontrada", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))) })
-	@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Formulario multipart con archivo y metadatos", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = UploadRouteImageForm.class)))
+			@ApiResponse(responseCode = "200", description = "Subidas", content = @Content(schema = @Schema(implementation = UploadImagesResponse.class))),
+			@ApiResponse(responseCode = "400", description = "Archivo/entrada inválida"),
+			@ApiResponse(responseCode = "401", description = "No autenticado"),
+			@ApiResponse(responseCode = "404", description = "Ruta no encontrada") })
+	@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Formulario multipart con uno o varios archivos y metadatos comunes opcionales", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
 	@PostMapping(path = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public UploadImageResponse upload(
-			@Parameter(description = "ID de la ruta", example = "101") @PathVariable Integer id,
-			@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+	public UploadImagesResponse upload(@PathVariable Integer id, @RequestParam("files") MultipartFile[] files, // 👈
+																												// múltiple
 			@RequestParam(value = "title", required = false) String title,
 			@RequestParam(value = "alt", required = false) String alt,
 			@RequestParam(value = "cover", required = false) Boolean cover) throws Exception {
+
 		var route = routeRepo.findById(id).orElseThrow(() -> new java.util.NoSuchElementException("Route not found"));
 
-		String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
-				.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
+		int basePos = imageRepo.listByRoute(id).size();
+		java.util.List<ImageDto> created = new java.util.ArrayList<>();
 
-		String name = java.util.UUID.randomUUID() + "." + ext;
-		String url = storage.upload("routes/" + id, name, file.getInputStream(), file.getContentType(), file.getSize());
+		for (int i = 0; i < files.length; i++) {
+			MultipartFile file = files[i];
+			String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
+					.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
 
-		var img = new RouteImage();
-		img.setRoute(route);
-		img.setUrl(url);
-		img.setTitle(title);
-		img.setAlt(alt);
-		img.setCover(cover != null ? cover : Boolean.FALSE);
-		img.setPosition(imageRepo.listByRoute(id).size());
-		var saved = imageRepo.save(img);
+			String name = java.util.UUID.randomUUID() + "." + ext;
+			String url = storage.upload("routes/" + id, name, file.getInputStream(), file.getContentType(),
+					file.getSize());
 
-		if (Boolean.TRUE.equals(img.getCover())) {
+			var img = new RouteImage();
+			img.setRoute(route);
+			img.setUrl(url);
+			img.setTitle(title);
+			img.setAlt(alt);
+			img.setCover(Boolean.TRUE.equals(cover) && i == 0); // portada solo al primero, opcional
+			img.setPosition(basePos + i);
+
+			var saved = imageRepo.save(img);
+			created.add(new ImageDto(saved.getRouteImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
+					saved.getCover(), saved.getPosition()));
+		}
+
+		if (Boolean.TRUE.equals(cover) && !created.isEmpty()) {
+			var first = created.get(0);
 			imageRepo.listByRoute(id).forEach(other -> {
-				if (!other.getRouteImageId().equals(saved.getRouteImageId()) && Boolean.TRUE.equals(other.getCover())) {
+				if (!other.getRouteImageId().equals(first.id()) && Boolean.TRUE.equals(other.getCover())) {
 					other.setCover(false);
 				}
 			});
 		}
 
-		var dto = new ImageDto(saved.getRouteImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
-				saved.getCover(), saved.getPosition());
-		return new UploadImageResponse(dto);
+		return new UploadImagesResponse(created);
 	}
 
 	@Operation(summary = "Reordenar imágenes", description = "Actualiza `position` según `orderedIds` (0..n).", operationId = "adminReorderRouteImages")

@@ -13,31 +13,34 @@ import com.ecuatrails.api.model.InterestPoint;
 
 public interface InterestPointRepository extends JpaRepository<InterestPoint, Integer> {
 
-	@Query("""
-			  select distinct p
-			  from Route r
-			    join r.interestPoints p
-			  where r.routeId = :routeId
-			    and p.Status = true
-			  order by p.name asc
-			""")
-	List<InterestPoint> findActiveByRoute(@Param("routeId") Integer routeId);
+	  @Query("""
+	    select distinct p
+	    from Route r
+	      join r.interestPoints p
+	    where r.routeId = :routeId
+	      and p.Status = true
+	    order by p.name asc
+	  """)
+	  List<InterestPoint> findActiveByRoute(@Param("routeId") Integer routeId);
 
-	// Detail
-	@Query("""
-			  select p
-			  from InterestPoint p
-			  where p.interestPointId = :id and p.Status = true
-			""")
-	Optional<InterestPoint> findActiveById(@Param("id") Integer id);
+	  @Query("""
+	    select p
+	    from InterestPoint p
+	    where p.interestPointId = :id and p.Status = true
+	  """)
+	  Optional<InterestPoint> findActiveById(@Param("id") Integer id);
 
-	@Query("""
-			  select p from InterestPoint p
-			  where (:q is null or lower(p.name) like lower(concat('%', :q, '%'))
-			                 or lower(p.description) like lower(concat('%', :q, '%'))
-			                 or lower(p.city) like lower(concat('%', :q, '%')))
-			    and (:active is null or p.Status = :active)
-			  order by p.name asc
-			""")
-	Page<InterestPoint> search(@Param("q") String q, @Param("active") Boolean active, Pageable pageable);
-}
+	  @Query("""
+	    select p from InterestPoint p
+	    where (:q is null
+	           or p.name        ilike concat('%', cast(:q as string), '%')
+	           or p.description ilike concat('%', cast(:q as string), '%')
+	           or p.city        ilike concat('%', cast(:q as string), '%'))
+	      and (:active is null or p.Status = :active)
+	    order by p.name asc
+	  """)
+	  Page<InterestPoint> search(@Param("q") String q,
+	                             @Param("active") Boolean active,
+	                             Pageable pageable);
+	}
+

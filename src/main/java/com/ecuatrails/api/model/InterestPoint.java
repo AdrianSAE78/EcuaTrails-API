@@ -57,6 +57,7 @@ public class InterestPoint {
 	
 	private LocalDateTime Modified;
 	
+	@Column(name = "status") 
 	private Boolean Status = true;
 
 	// Constructor

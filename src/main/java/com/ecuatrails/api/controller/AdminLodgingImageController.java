@@ -1,6 +1,10 @@
 package com.ecuatrails.api.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +19,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.ecuatrails.api.dto.ImageDto;
 import com.ecuatrails.api.dto.ReorderImagesRequest;
 import com.ecuatrails.api.dto.UpdateImageMetaRequest;
 import com.ecuatrails.api.dto.UploadImageResponse;
+import com.ecuatrails.api.dto.UploadImagesResponse;
 import com.ecuatrails.api.dto.UploadLodgingImageForm;
 import com.ecuatrails.api.helpers.StorageService;
 import com.ecuatrails.api.model.LodgingImage;
@@ -41,7 +47,7 @@ import jakarta.validation.Valid;
 @Validated
 @PreAuthorize("hasRole('ADMIN')")
 @RestController
-@RequestMapping("/api/admin/lodging")
+@RequestMapping("/api/admin/lodgings")
 @Tag(name = "Admin • Lodging Images", description = "Gestión de imágenes para alojamientos")
 public class AdminLodgingImageController {
 
@@ -81,43 +87,48 @@ public class AdminLodgingImageController {
 			@ApiResponse(responseCode = "404", description = "Alojamiento no encontrado", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))) })
 	@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Formulario multipart con archivo y metadatos", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, schema = @Schema(implementation = UploadLodgingImageForm.class)))
 	@PostMapping(path = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public UploadImageResponse upload(
-			@Parameter(description = "ID del alojamiento", example = "11") @PathVariable Integer id,
-			@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+	public UploadImagesResponse upload(@PathVariable Integer id, @RequestParam("files") MultipartFile[] files,
 			@RequestParam(value = "title", required = false) String title,
 			@RequestParam(value = "alt", required = false) String alt,
 			@RequestParam(value = "cover", required = false) Boolean cover) throws Exception {
 		var lodging = lodgingRepository.findById(id)
 				.orElseThrow(() -> new java.util.NoSuchElementException("Lodging not found"));
 
-		String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
-				.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
+		int basePos = imageRepo.listByLodging(id).size();
+		java.util.List<ImageDto> created = new java.util.ArrayList<>();
 
-		String name = java.util.UUID.randomUUID() + "." + ext;
-		String url = storage.upload("lodgings/" + id, name, file.getInputStream(), file.getContentType(),
-				file.getSize());
+		for (int i = 0; i < files.length; i++) {
+			MultipartFile file = files[i];
+			String ext = java.util.Optional.ofNullable(file.getOriginalFilename()).filter(f -> f.contains("."))
+					.map(f -> f.substring(f.lastIndexOf('.') + 1)).orElse("jpg");
 
-		var img = new LodgingImage();
-		img.setLodging(lodging);
-		img.setUrl(url);
-		img.setTitle(title);
-		img.setAlt(alt);
-		img.setCover(cover != null ? cover : Boolean.FALSE);
-		img.setPosition(imageRepo.listByLodging(id).size());
-		var saved = imageRepo.save(img);
+			String name = java.util.UUID.randomUUID() + "." + ext;
+			String url = storage.upload("lodgings/" + id, name, file.getInputStream(), file.getContentType(),
+					file.getSize());
 
-		if (Boolean.TRUE.equals(img.getCover())) {
+			var img = new LodgingImage();
+			img.setLodging(lodging);
+			img.setUrl(url);
+			img.setTitle(title);
+			img.setAlt(alt);
+			img.setCover(Boolean.TRUE.equals(cover) && i == 0);
+			img.setPosition(basePos + i);
+
+			var saved = imageRepo.save(img);
+			created.add(new ImageDto(saved.getLodgingImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
+					saved.getCover(), saved.getPosition()));
+		}
+
+		if (Boolean.TRUE.equals(cover) && !created.isEmpty()) {
+			var first = created.get(0);
 			imageRepo.listByLodging(id).forEach(other -> {
-				if (!other.getLodgingImageId().equals(saved.getLodgingImageId())
-						&& Boolean.TRUE.equals(other.getCover())) {
+				if (!other.getLodgingImageId().equals(first.id()) && Boolean.TRUE.equals(other.getCover())) {
 					other.setCover(false);
 				}
 			});
 		}
 
-		var dto = new ImageDto(saved.getLodgingImageId(), saved.getUrl(), saved.getTitle(), saved.getAlt(),
-				saved.getCover(), saved.getPosition());
-		return new UploadImageResponse(dto);
+		return new UploadImagesResponse(created);
 	}
 
 	@Operation(summary = "Reordenar imágenes", description = "Actualiza `position` según `orderedIds` (0..n).", operationId = "adminReorderLodgingImages")

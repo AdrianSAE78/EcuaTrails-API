@@ -10,25 +10,34 @@ import org.springframework.data.repository.query.Param;
 
 import com.ecuatrails.api.model.User;
 
-
-public interface UserRepository extends JpaRepository <User, Integer> {
+public interface UserRepository extends JpaRepository<User, Integer> {
 	Optional<User> findByUsername(String username);
+
 	Optional<User> findByEmail(String email);
+
 	Optional<User> findByUid(String uid);
+
 	boolean existsByUsername(String username);
-    boolean existsByEmail(String email);
-    boolean existsByUsernameIgnoreCase(String username);
-    boolean existsByEmailIgnoreCase(String email);
-    
-    @Query("""
-    	      select h.route.routeId
-    	      from UserHistoryRoute h
-    	      where h.user.userId = :userId
-    	        and h.isFinished = true
-    	        and h.routeDate >= :cutoff
-    	    """)
-    	    List<Integer> findFinishedRouteIdsSince(
-    	        @Param("userId") Integer userId,
-    	        @Param("cutoff") LocalDateTime cutoff
-    	    );
+
+	boolean existsByEmail(String email);
+
+	boolean existsByUsernameIgnoreCase(String username);
+
+	boolean existsByEmailIgnoreCase(String email);
+
+	@Query("""
+			  select h.route.routeId
+			  from UserHistoryRoute h
+			  where h.user.userId = :userId
+			    and h.isFinished = true
+			    and h.routeDate >= :cutoff
+			""")
+	List<Integer> findFinishedRouteIdsSince(@Param("userId") Integer userId, @Param("cutoff") LocalDateTime cutoff);
+
+	@Query("""
+			  select u from User u
+			  left join fetch u.roles
+			  where u.username = :username
+			""")
+	Optional<User> findByUsernameFetchRoles(@Param("username") String username);
 }

@@ -32,8 +32,9 @@ public class LodgingService {
 	  }
 
 	  public Page<LodgingListItem> list(String q, BigDecimal minPrice, BigDecimal maxPrice, int page, int size) {
-	    var pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-	    return lodgingRepo.search(q, minPrice, maxPrice, pageable).map(Mappers::toLodgingListItem);
+		  String term = (q == null || q.isBlank()) ? null : "%" + q + "%";
+		  var pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+	    return lodgingRepo.search(term, minPrice, maxPrice, pageable).map(Mappers::toLodgingListItem);
 	  }
 
 	  public LodgingDetail get(Integer id) {

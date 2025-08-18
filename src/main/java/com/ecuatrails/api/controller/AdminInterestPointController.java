@@ -18,12 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecuatrails.api.dto.AdminInterestPointDetail;
 import com.ecuatrails.api.dto.AdminInterestPointList;
+import com.ecuatrails.api.dto.AdminPoiTransportLinkDto;
 import com.ecuatrails.api.dto.BulkInterestPointRequest;
 import com.ecuatrails.api.dto.CreateInterestPointRequest;
+import com.ecuatrails.api.dto.CreateIptLinkRequest;
 import com.ecuatrails.api.dto.GeocodeResponse;
 import com.ecuatrails.api.dto.PageAdminInterestPointListResponse;
 import com.ecuatrails.api.dto.StatusRequest;
 import com.ecuatrails.api.dto.UpdateInterestPointRequest;
+import com.ecuatrails.api.dto.UpdatePoiTransportLinkRequest;
 import com.ecuatrails.api.service.AdminInterestPointService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -147,5 +150,63 @@ public class AdminInterestPointController {
 			@Parameter(description = "ID del POI", example = "301") @PathVariable Integer id,
 			@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "Nuevo estado", content = @Content(schema = @Schema(implementation = StatusRequest.class), examples = @ExampleObject(value = "{ \"status\": true }"))) @Valid @RequestBody StatusRequest body) {
 		return ResponseEntity.ok(service.setStatus(id, Boolean.TRUE.equals(body.status())));
+	}
+	
+	@Operation(summary = "Listar transportes de un POI", description = "Devuelve los vínculos POI-Transporte.", operationId = "adminListPoiTransports")
+	@ApiResponses({
+	    @ApiResponse(responseCode = "200", description = "OK",
+	        content = @Content(schema = @Schema(implementation = AdminPoiTransportLinkDto.class),
+	        examples = @ExampleObject(name = "lista", value = "[{\"id\": 41, \"transportId\": 7, \"transportName\": \"Bus A\", \"walkingDistanceMeters\": 200, \"estimatedWalkingTime\": 3, \"status\": true}]")))
+	})
+	@GetMapping("/{id}/transports")
+	public ResponseEntity<java.util.List<AdminPoiTransportLinkDto>> listPoiTransports(
+	        @Parameter(description = "ID del POI", example = "301") @PathVariable Integer id) {
+	    return ResponseEntity.ok(service.listTransports(id));
+	}
+
+	@Operation(summary = "Vincular transporte a un POI", description = "Crea el vínculo POI-Transporte.", operationId = "adminAddPoiTransport")
+	@ApiResponses({
+	    @ApiResponse(responseCode = "200", description = "Agregado",
+	        content = @Content(schema = @Schema(implementation = AdminPoiTransportLinkDto.class),
+	        examples = @ExampleObject(value = "{\"id\": 42, \"transportId\": 9, \"transportName\": \"Metro L1\", \"status\": true}"))),
+	    @ApiResponse(responseCode = "404", description = "POI o transporte no encontrado",
+	        content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class)))
+	})
+	@PostMapping("/{id}/transports")
+	public ResponseEntity<AdminPoiTransportLinkDto> addPoiTransport(
+	        @PathVariable Integer id,
+	        @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+	          description = "Vínculo a crear",
+	          content = @Content(schema = @Schema(implementation = CreateIptLinkRequest.class)))
+	        @Valid @RequestBody CreateIptLinkRequest body) {
+	    return ResponseEntity.ok(service.addTransport(id, body));
+	}
+
+	@Operation(summary = "Actualizar vínculo POI-Transporte", description = "Edita distancia/tiempo/notas/estado del vínculo.", operationId = "adminUpdatePoiTransport")
+	@ApiResponses({
+	    @ApiResponse(responseCode = "200", description = "Actualizado",
+	        content = @Content(schema = @Schema(implementation = AdminPoiTransportLinkDto.class))),
+	    @ApiResponse(responseCode = "404", description = "Vínculo no encontrado",
+	        content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class)))
+	})
+	@PutMapping("/{id}/transports/{linkId}")
+	public ResponseEntity<AdminPoiTransportLinkDto> updatePoiTransport(
+	        @PathVariable Integer id,
+	        @PathVariable Integer linkId,
+	        @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+	          description = "Campos a actualizar",
+	          content = @Content(schema = @Schema(implementation = UpdatePoiTransportLinkRequest.class)))
+	        @Valid @RequestBody UpdatePoiTransportLinkRequest body) {
+	    return ResponseEntity.ok(service.updateTransportLink(id, linkId, body));
+	}
+
+	@Operation(summary = "Eliminar vínculo POI-Transporte", description = "Elimina el vínculo.", operationId = "adminDeletePoiTransport")
+	@ApiResponses({ @ApiResponse(responseCode = "204", description = "Eliminado") })
+	@DeleteMapping("/{id}/transports/{linkId}")
+	public ResponseEntity<Void> deletePoiTransport(
+	        @PathVariable Integer id,
+	        @PathVariable Integer linkId) {
+	    service.removeTransport(id, linkId);
+	    return ResponseEntity.noContent().build();
 	}
 }
