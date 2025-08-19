@@ -39,7 +39,7 @@ public class InterestPoint {
 	
 	private Float longitude;
 	
-	@Column(length = 200)
+	@Column(length = 300)
 	private String address;
 	
 	@Column(length = 50)
