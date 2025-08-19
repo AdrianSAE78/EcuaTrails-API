@@ -46,13 +46,13 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 		                     Pageable pageable);
 
 	@Query("""
-			  select l from Route r
-			  	left join fetch r.images i
-			    join r.lodgings l
-			  where r.routeId = :routeId and l.status = true
-			  order by l.name asc
-			""")
-	List<Lodging> findActiveLodgingsByRoute(@Param("routeId") Integer routeId);
+		    select r
+		    from Route r
+		    left join fetch r.images i
+		    where r.routeId = :routeId and r.status = true
+		    order by i.position asc, i.routeImageId asc
+		""")
+		List<Lodging> findActiveLodgingsByRoute(@Param("routeId") Integer routeId);
 
 	@Query("select count(r) from Route r where r.category.categoryId = :categoryId")
 	long countByCategoryId(@Param("categoryId") Integer categoryId);
