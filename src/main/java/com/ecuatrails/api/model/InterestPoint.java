@@ -29,7 +29,7 @@ public class InterestPoint {
 	@OrderBy("position asc, interestPointImageId asc")
 	private java.util.List<InterestPointImage> images = new java.util.ArrayList<>();
 	
-	@Column(length = 32)
+	@Column(length = 128)
 	private String name;
 	
 	@Column(length = 64)
