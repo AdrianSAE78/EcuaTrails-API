@@ -93,3 +93,4 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 	@Query("select count(r) from Route r join r.lodgings l where l.lodgingId = :lodgingId")
 	long countRoutesUsingLodging(@Param("lodgingId") Integer lodgingId);
 }
+

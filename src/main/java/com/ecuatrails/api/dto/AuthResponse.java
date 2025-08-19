@@ -97,3 +97,4 @@ public class AuthResponse {
     public String getAuthType() { return authType; }
     public void setAuthType(String authType) { this.authType = authType; }
 }
+
