@@ -1,5 +1,6 @@
 package com.ecuatrails.api.helpers;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.ecuatrails.api.dto.AdminInterestPointDetail;
@@ -47,10 +48,28 @@ public class Mappers {
 		return new CategoryDto(c.getCategoryId(), c.getCode(), c.getName());
 	}
 
-	public static RouteCard toCard(Route r) {
-		return new RouteCard(r.getRouteId(), r.getName(), r.getDescription(),
-				r.getCategory() != null ? r.getCategory().getName() : null, r.getEstimatedDuration(), r.getDistance(),
-				r.getDifficulty());
+	public static RouteCard toCard(Route route) {
+	    List<ImageDto> imageList = route.getImages().stream()
+	        .map(routeImage -> new ImageDto(
+	            routeImage.getRouteImageId(),
+	            routeImage.getUrl(),
+	            routeImage.getTitle(),
+	            routeImage.getAlt(),
+	            routeImage.getCover(),
+	            routeImage.getPosition()
+	        ))
+	        .collect(Collectors.toList());
+	    
+	    return new RouteCard(
+	        route.getRouteId(),
+	        route.getName(),
+	        route.getDescription(),
+	        route.getCategory() != null ? route.getCategory().getName() : null,
+	        imageList,
+	        route.getEstimatedDuration(),
+	        route.getDistance(),
+	        route.getDifficulty()
+	    );
 	}
 
 	public static RouteListItem toRouteListItem(Route r) {
@@ -284,3 +303,4 @@ public class Mappers {
 			l.setStatus(r.status());
 	}
 }
+

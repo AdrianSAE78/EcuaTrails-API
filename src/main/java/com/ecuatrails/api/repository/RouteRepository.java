@@ -15,16 +15,19 @@ import com.ecuatrails.api.model.Route;
 public interface RouteRepository extends JpaRepository<Route, Integer> {
 
 	@Query("""
-			  select r
-			  from Route r
-			  where r.status = true
-			    and (:categoryId is null or r.category.categoryId = :categoryId)
-			    and (:maxDuration is null or r.estimatedDuration <= :maxDuration)
-			    and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
-			  order by r.created desc
+			select distinct r
+			from Route r
+			left join fetch r.images i
+			left join fetch r.category c
+			where r.status = true
+			and (:categoryId is null or r.category.categoryId = :categoryId)
+			and (:maxDuration is null or r.estimatedDuration <= :maxDuration)
+			and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
+			order by r.created desc
 			""")
-	List<Route> findRecommended(@Param("categoryId") Integer categoryId, @Param("maxDuration") Duration maxDuration,
-			@Param("excludeIds") List<Integer> excludeIds);
+			List<Route> findRecommended(@Param("categoryId") Integer categoryId, 
+			                           @Param("maxDuration") Duration maxDuration,
+			                           @Param("excludeIds") List<Integer> excludeIds);
 
 	@Query("""
 		    select r
@@ -80,3 +83,4 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 	@Query("select count(r) from Route r join r.lodgings l where l.lodgingId = :lodgingId")
 	long countRoutesUsingLodging(@Param("lodgingId") Integer lodgingId);
 }
+

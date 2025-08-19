@@ -17,6 +17,7 @@ public class AuthResponse {
 
     @Schema(name = "AuthResponse.UserInfo", description = "Perfil mínimo del usuario")
     public static class UserInfo {
+    	@Schema(example = "1") private Integer id;
     	@Schema(example = "Ana") private String name;
         @Schema(example = "Pérez") private String lastName;
         @Schema(example = "ana") private String username;
@@ -24,7 +25,8 @@ public class AuthResponse {
         @Schema(description = "Roles con prefijo ROLE_", example = "[\"ROLE_USER\",\"ROLE_ADMIN\"]")
         private List<String> roles;
 
-        public UserInfo(String name, String lastName, String username, String email, List<String> roles) {
+        public UserInfo(Integer id, String name, String lastName, String username, String email, List<String> roles) {
+        	this.id = id;
             this.name = name;
             this.lastName = lastName;
             this.username = username;
@@ -33,6 +35,9 @@ public class AuthResponse {
         }
 
         // Getters y setters
+        public Integer getId() { return id; }
+        public void setId(Integer id) { this.id = id; }
+        
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
         
@@ -92,3 +97,4 @@ public class AuthResponse {
     public String getAuthType() { return authType; }
     public void setAuthType(String authType) { this.authType = authType; }
 }
+

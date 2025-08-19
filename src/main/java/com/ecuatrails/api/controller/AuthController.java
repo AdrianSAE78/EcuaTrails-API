@@ -102,11 +102,11 @@ public class AuthController {
 		UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 		String jwtToken = jwtService.generateToken(userDetails);
 
+		var user = userService.findByUsername(request.getUsername());
+		
 		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-		var user = userService.findByUsername(request.getUsername());
-
-		AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getName(), user.getLastName(),
+		AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getUserId(), user.getName(), user.getLastName(),
 				user.getUsername(), user.getEmail(), roles);
 
 		return ResponseEntity.ok(AuthResponse.builder().token(jwtToken).user(userInfo).authType("LOCAL").build());
@@ -153,7 +153,7 @@ public class AuthController {
 			List<String> roles = user.getRoles().stream().map(role -> "ROLE_" + role.getRoleCode())
 					.collect(Collectors.toList());
 
-			AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getName(), user.getLastName(),
+			AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getUserId(), user.getName(), user.getLastName(),
 					user.getUsername(), user.getEmail(), roles);
 
 			return ResponseEntity
@@ -209,7 +209,7 @@ public class AuthController {
 		List<String> roles = user.getRoles().stream().map(role -> "ROLE_" + role.getRoleCode())
 				.collect(Collectors.toList());
 
-		AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getName(), user.getLastName(),
+		AuthResponse.UserInfo userInfo = new AuthResponse.UserInfo(user.getUserId(), user.getName(), user.getLastName(),
 				user.getUsername(), user.getEmail(), roles);
 
 		return ResponseEntity.ok(AuthResponse.builder().token(jwtToken).user(userInfo).authType("LOCAL").build());
@@ -226,7 +226,7 @@ public class AuthController {
 		var roles = ud.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
 		var user = userService.findByUsername(ud.getUsername());
-		var info = new AuthResponse.UserInfo(user.getName(), user.getLastName(), user.getUsername(), user.getEmail(),
+		var info = new AuthResponse.UserInfo(user.getUserId(), user.getName(), user.getLastName(), user.getUsername(), user.getEmail(),
 				roles);
 
 		return ResponseEntity
