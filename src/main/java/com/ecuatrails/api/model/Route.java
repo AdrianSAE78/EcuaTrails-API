@@ -52,7 +52,7 @@ public class Route {
 	@Column(length = 64)
 	private String name;
 	
-	@Column(length = 254)
+	@Column(length = 512)
 	private String description;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
