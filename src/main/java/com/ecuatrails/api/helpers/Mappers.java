@@ -1,5 +1,6 @@
 package com.ecuatrails.api.helpers;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.ecuatrails.api.dto.AdminInterestPointDetail;
@@ -17,6 +18,7 @@ import com.ecuatrails.api.dto.CategoryDto;
 import com.ecuatrails.api.dto.CreateInterestPointRequest;
 import com.ecuatrails.api.dto.CreateLodgingRequest;
 import com.ecuatrails.api.dto.CreateTransportRequest;
+import com.ecuatrails.api.dto.HistoryItem;
 import com.ecuatrails.api.dto.ImageDto;
 import com.ecuatrails.api.dto.InterestPointDetail;
 import com.ecuatrails.api.dto.InterestPointListItem;
@@ -41,16 +43,35 @@ import com.ecuatrails.api.model.Route;
 import com.ecuatrails.api.model.RouteInterestPoint;
 import com.ecuatrails.api.model.RouteLodging;
 import com.ecuatrails.api.model.Transport;
+import com.ecuatrails.api.model.UserHistoryRoute;
 
 public class Mappers {
 	public static CategoryDto toCategoryDto(Category c) {
 		return new CategoryDto(c.getCategoryId(), c.getCode(), c.getName());
 	}
 
-	public static RouteCard toCard(Route r) {
-		return new RouteCard(r.getRouteId(), r.getName(), r.getDescription(),
-				r.getCategory() != null ? r.getCategory().getName() : null, r.getEstimatedDuration(), r.getDistance(),
-				r.getDifficulty());
+	public static RouteCard toCard(Route route) {
+	    List<ImageDto> imageList = route.getImages().stream()
+	        .map(routeImage -> new ImageDto(
+	            routeImage.getRouteImageId(),
+	            routeImage.getUrl(),
+	            routeImage.getTitle(),
+	            routeImage.getAlt(),
+	            routeImage.getCover(),
+	            routeImage.getPosition()
+	        ))
+	        .collect(Collectors.toList());
+	    
+	    return new RouteCard(
+	        route.getRouteId(),
+	        route.getName(),
+	        route.getDescription(),
+	        route.getCategory() != null ? route.getCategory().getName() : null,
+	        imageList,
+	        route.getEstimatedDuration(),
+	        route.getDistance(),
+	        route.getDifficulty()
+	    );
 	}
 
 	public static RouteListItem toRouteListItem(Route r) {
@@ -282,5 +303,29 @@ public class Mappers {
 			l.setLongitude(r.longitude());
 		if (r.status() != null)
 			l.setStatus(r.status());
+	}
+	
+	public static HistoryItem toHistoryItem(UserHistoryRoute h) {
+	    List<ImageDto> imageList = h.getRoute().getImages().stream()
+	        .map(routeImage -> new ImageDto(
+	            routeImage.getRouteImageId(),
+	            routeImage.getUrl(),
+	            routeImage.getTitle(),
+	            routeImage.getAlt(),
+	            routeImage.getCover(),
+	            routeImage.getPosition()
+	        ))
+	        .collect(Collectors.toList());
+	    
+	    return new HistoryItem(
+	        h.getUserHistoryRouteId(),
+	        h.getRoute().getRouteId(),
+	        h.getRoute().getName(),
+	        h.getRoute().getDifficulty(),
+	        imageList,
+	        h.getRoute().getEstimatedDuration(),
+	        h.getRouteDate(),
+	        h.getIsFinished()
+	    );
 	}
 }

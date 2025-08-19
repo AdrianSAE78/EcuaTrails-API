@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecuatrails.api.dto.PageRouteListResponse;
+import com.ecuatrails.api.dto.RouteCard;
 import com.ecuatrails.api.dto.RouteDetail;
-import com.ecuatrails.api.dto.RouteListItem;
 import com.ecuatrails.api.dto.RouteMap;
 import com.ecuatrails.api.service.RouteService;
 import com.ecuatrails.api.service.UserService;
@@ -72,7 +72,7 @@ public class RouteController {
 			@ApiResponse(responseCode = "401", description = "No autenticado", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))),
 			@ApiResponse(responseCode = "400", description = "Parámetros inválidos", content = @Content(schema = @Schema(implementation = com.ecuatrails.api.dto.ApiError.class))) })
 	@GetMapping("/routes")
-	public ResponseEntity<org.springframework.data.domain.Page<RouteListItem>> listRoutes(
+	public ResponseEntity<org.springframework.data.domain.Page<RouteCard>> listRoutes(
 			@Parameter(description = "Número de página (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
 			@Parameter(description = "Tamaño de página", example = "10") @RequestParam(defaultValue = "10") int size,
 			@Parameter(description = "ID de categoría", example = "1") @RequestParam(required = false) Integer categoryId,

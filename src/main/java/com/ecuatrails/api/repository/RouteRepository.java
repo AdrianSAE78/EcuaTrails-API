@@ -2,6 +2,7 @@ package com.ecuatrails.api.repository;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,20 +16,24 @@ import com.ecuatrails.api.model.Route;
 public interface RouteRepository extends JpaRepository<Route, Integer> {
 
 	@Query("""
-			  select r
-			  from Route r
-			  where r.status = true
-			    and (:categoryId is null or r.category.categoryId = :categoryId)
-			    and (:maxDuration is null or r.estimatedDuration <= :maxDuration)
-			    and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
-			  order by r.created desc
+			select distinct r
+			from Route r
+			left join fetch r.images i
+			left join fetch r.category c
+			where r.status = true
+			and (:categoryId is null or r.category.categoryId = :categoryId)
+			and (:maxDuration is null or r.estimatedDuration <= :maxDuration)
+			and (coalesce(:excludeIds, null) is null or r.routeId not in :excludeIds)
+			order by r.created desc
 			""")
-	List<Route> findRecommended(@Param("categoryId") Integer categoryId, @Param("maxDuration") Duration maxDuration,
-			@Param("excludeIds") List<Integer> excludeIds);
+			List<Route> findRecommended(@Param("categoryId") Integer categoryId, 
+			                           @Param("maxDuration") Duration maxDuration,
+			                           @Param("excludeIds") List<Integer> excludeIds);
 
 	@Query("""
 		    select r
 		    from Route r
+		    left join fetch r.images i
 		    where r.status = true
 		      and (:categoryId is null or r.category.categoryId = :categoryId)
 		      and (:difficulty is null or r.difficulty = :difficulty)
@@ -42,6 +47,7 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 
 	@Query("""
 			  select l from Route r
+			  	left join fetch r.images i
 			    join r.lodgings l
 			  where r.routeId = :routeId and l.status = true
 			  order by l.name asc
@@ -70,6 +76,13 @@ public interface RouteRepository extends JpaRepository<Route, Integer> {
 		                             @Param("categoryId") Integer categoryId,
 		                             @Param("status") Boolean status,
 		                             Pageable pageable);
+	
+	@Query("""
+			select r from Route r
+			left join fetch r.images i
+			where r.routeId = :routeId
+			""")
+	Optional<Route> findByIdWithImages(@Param("routeId") Integer routeId);
 
 	@Query("select count(l) from Route r join r.lodgings l where r.routeId = :routeId")
 	long countLodgings(@Param("routeId") Integer routeId);

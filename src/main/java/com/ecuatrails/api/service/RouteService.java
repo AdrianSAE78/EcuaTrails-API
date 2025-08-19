@@ -7,8 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.ecuatrails.api.dto.RouteCard;
 import com.ecuatrails.api.dto.RouteDetail;
-import com.ecuatrails.api.dto.RouteListItem;
 import com.ecuatrails.api.dto.RouteMap;
 import com.ecuatrails.api.helpers.Mappers;
 import com.ecuatrails.api.model.Route;
@@ -33,9 +33,9 @@ public class RouteService {
 	    this.historyRepository = historyRepository;
 	  }
 
-	  public Page<RouteListItem> list(Integer categoryId, String difficulty, String q, int page, int size) {
+	  public Page<RouteCard> list(Integer categoryId, String difficulty, String q, int page, int size) {
 	    var pageable = PageRequest.of(page, size);
-	    return routeRepository.search(categoryId, difficulty, q, pageable).map(Mappers::toRouteListItem);
+	    return routeRepository.search(categoryId, difficulty, q, pageable).map(Mappers::toCard);
 	  }
 
 	  public RouteDetail get(Integer id) {

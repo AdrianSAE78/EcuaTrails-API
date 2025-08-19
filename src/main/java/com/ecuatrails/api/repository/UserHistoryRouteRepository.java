@@ -50,10 +50,19 @@ public interface UserHistoryRouteRepository extends JpaRepository<UserHistoryRou
 	@Query("""
 			  select h from UserHistoryRoute h
 			    join fetch h.route r
+			    left join fetch r.images i
 			  where h.user.userId = :userId
 			  order by h.routeDate desc
 			""")
 	Page<UserHistoryRoute> findByUser(@Param("userId") Integer userId, Pageable pageable);
+	
+	@Query("""
+			select h from UserHistoryRoute h
+			join fetch h.route r
+			left join fetch r.images i
+			where h in :histories
+			""")
+	List<UserHistoryRoute> findWithRouteAndImages(@Param("histories") List<UserHistoryRoute> histories);
 
 	@Query("""
 			  select h from UserHistoryRoute h
